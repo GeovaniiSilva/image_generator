@@ -15,6 +15,29 @@ defmodule Identicon do
     |> save_image(input)
   end
 
+  def hash_input(input) do
+    hex =
+      :crypto.hash(:md5, input)
+      |> :binary.bin_to_list()
+
+    %Identicon.Image{hex: hex}
+  end
+
+  def pick_color(%Identicon.Image{hex: [red, green, blue | _tail]} = image) do
+    %Identicon.Image{image | color: {red, green, blue}}
+  end
+
+  def build_grid(%Identicon.Image{hex: hex} = image) do
+    grid =
+      hex
+      |> Enum.chunk_every(3)
+      |> Enum.map(&mirror_row/1)
+      |> List.flatten()
+      |> Enum.with_index()
+
+    %Identicon.Image{image | grid: grid}
+  end
+
   def save_image(image, filename) do
     File.write("#{filename}.png", image)
   end
@@ -60,28 +83,5 @@ defmodule Identicon do
 
   def mirror_row(row) do
     row
-  end
-
-  def build_grid(%Identicon.Image{hex: hex} = image) do
-    grid =
-      hex
-      |> Enum.chunk_every(3)
-      |> Enum.map(&mirror_row/1)
-      |> List.flatten()
-      |> Enum.with_index()
-
-    %Identicon.Image{image | grid: grid}
-  end
-
-  def pick_color(%Identicon.Image{hex: [red, green, blue | _tail]} = image) do
-    %Identicon.Image{image | color: {red, green, blue}}
-  end
-
-  def hash_input(input) do
-    hex =
-      :crypto.hash(:md5, input)
-      |> :binary.bin_to_list()
-
-    %Identicon.Image{hex: hex}
   end
 end
